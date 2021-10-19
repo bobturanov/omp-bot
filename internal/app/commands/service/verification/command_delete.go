@@ -13,37 +13,23 @@ func (c *ServiceVerificationCommander) Delete(inputMessage *tgbotapi.Message) {
 	itemID, err := strconv.Atoi(args)
 
 	if err != nil {
-		log.Println("wrong args", args)
-		msg := tgbotapi.NewMessage(
-			inputMessage.Chat.ID,
-			"Please enter a number as an argument.",
-		)
-		_, err := c.bot.Send(msg)
-		if err != nil {
-			log.Printf("ServiceVerificationCommander.Delete: error sending reply message to chat - %v", err)
-		}
+		c.handleError("Please enter a number as an argument.",
+			fmt.Sprintf("wrong args %v", args),
+			inputMessage)
 		return
 	}
 
 	status, err := c.verificationService.Remove(uint64(itemID))
 	if err != nil {
-		log.Printf("Deleting item ID: %d Error: %v", itemID, err)
-		msg := tgbotapi.NewMessage(
-			inputMessage.Chat.ID,
+		c.handleError(fmt.Sprintf("Deleting item ID: %d Error: %v", itemID, err),
 			fmt.Sprintf("Can't delete item ID: %d, maybe it doesn't exist", itemID),
-		)
-		_, err := c.bot.Send(msg)
-		if err != nil {
-			log.Printf("ServiceVerificationCommander.Remove: error sending reply message to chat - %v", err)
-		}
+			inputMessage)
 		return
 	}
 
-	msgValue := ""
+	msgValue := fmt.Sprintf("Item ID %d is deleted", itemID)
 	if !status {
 		msgValue = fmt.Sprintf("Can't delete item ID: %d, maybe it doesn't exist", itemID)
-	} else {
-		msgValue = fmt.Sprintf("Item ID %d is deleted", itemID)
 	}
 
 	msg := tgbotapi.NewMessage(
